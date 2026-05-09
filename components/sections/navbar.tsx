@@ -5,6 +5,7 @@ import Link from "next/link"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Search, Menu, X, BrainCircuit } from "lucide-react"
+import { Show, UserButton, SignInButton } from "@clerk/nextjs"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false)
@@ -32,8 +33,20 @@ export function Navbar() {
         </div>
 
         <div className="hidden md:flex items-center gap-4">
-          <Button variant="ghost" className="text-sm font-medium">Log in</Button>
-          <Button className="rounded-full px-6 shadow-lg shadow-primary/20">Get Started</Button>
+          <Show when="signed-out">
+            <SignInButton mode="modal">
+              <Button variant="ghost" className="text-sm font-medium cursor-pointer">Log in</Button>
+            </SignInButton>
+            <Link href="/sign-up">
+              <Button className="rounded-full px-6 shadow-lg shadow-primary/20 cursor-pointer">Get Started</Button>
+            </Link>
+          </Show>
+          <Show when="signed-in">
+            <Link href="/dashboard" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-2">
+              Dashboard
+            </Link>
+            <UserButton />
+          </Show>
         </div>
 
         {/* Mobile Toggle */}
@@ -53,8 +66,22 @@ export function Navbar() {
           <Link href="#how-it-works" onClick={() => setIsOpen(false)}>How it Works</Link>
           <Link href="#pricing" onClick={() => setIsOpen(false)}>Pricing</Link>
           <div className="flex flex-col gap-3">
-            <Button variant="outline" className="w-full">Log in</Button>
-            <Button className="w-full">Get Started</Button>
+            <Show when="signed-out">
+              <Link href="/sign-in">
+                <Button variant="outline" className="w-full">Log in</Button>
+              </Link>
+              <Link href="/sign-up">
+                <Button className="w-full">Get Started</Button>
+              </Link>
+            </Show>
+            <Show when="signed-in">
+              <Link href="/dashboard">
+                <Button variant="outline" className="w-full">Dashboard</Button>
+              </Link>
+              <div className="flex items-center gap-3 px-4 py-2 bg-white/5 rounded-xl mt-2">
+                <UserButton showName />
+              </div>
+            </Show>
           </div>
         </motion.div>
       )}

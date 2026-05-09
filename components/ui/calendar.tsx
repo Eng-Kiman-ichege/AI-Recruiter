@@ -87,11 +87,11 @@ function Calendar({
             : "flex items-center gap-1 rounded-(--cell-radius) text-sm [&>svg]:size-3.5 [&>svg]:text-muted-foreground",
           defaultClassNames.caption_label
         ),
-        table: "w-full border-collapse",
-        weekdays: cn("flex", defaultClassNames.weekdays),
-        weekday: cn(
+        month_grid: "w-full border-collapse",
+        week_days: cn("flex", defaultClassNames.week_days),
+        week_day: cn(
           "flex-1 rounded-(--cell-radius) text-[0.8rem] font-normal text-muted-foreground select-none",
-          defaultClassNames.weekday
+          defaultClassNames.week_day
         ),
         week: cn("mt-2 flex w-full", defaultClassNames.week),
         week_number_header: cn(
