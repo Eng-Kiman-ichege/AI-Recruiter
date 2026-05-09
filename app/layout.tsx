@@ -19,6 +19,9 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: "InterviewIQ | AI-Powered Interview Simulator",
   description: "Master your next job interview with InterviewIQ. Realistic AI simulations, adaptive questioning, and instant feedback.",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
