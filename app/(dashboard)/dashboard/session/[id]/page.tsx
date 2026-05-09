@@ -36,16 +36,42 @@ import { INTERVIEWER_SYSTEM_PROMPT } from "@/lib/ai/prompts"
 
 // --- Constants ---
 
-const interviewStages = [
-  { id: 1, label: "Icebreaker", sub: "Warm-up & Introduction" },
-  { id: 2, label: "Behavioral", sub: "STAR Method Evaluation" },
-  { id: 3, label: "Situational", sub: "Problem Solving Scenarios" },
-  { id: 4, label: "Career Focus", sub: "Past Experience Review" },
-  { id: 5, label: "Industry Specific", sub: "Domain Standards" },
-  { id: 6, label: "Technical Skills", sub: "Deep-dive Assessment" },
-  { id: 7, label: "Follow-ups", sub: "Advanced Deep-dive" },
-  { id: 8, label: "Reflection", sub: "Final Closing" },
-]
+const getInterviewStages = (type: string = 'mixed') => {
+  if (type === 'technical') {
+    return [
+      { id: 1, label: "Introduction", sub: "Brief Warm-up" },
+      { id: 2, label: "Domain Knowledge", sub: "Industry Fundamentals" },
+      { id: 3, label: "Technical Skills", sub: "Deep-dive Assessment" },
+      { id: 4, label: "Problem Solving", sub: "Live Scenarios" },
+      { id: 5, label: "Reflection", sub: "Final Closing" },
+    ]
+  }
+  if (type === 'behavioral') {
+    return [
+      { id: 1, label: "Introduction", sub: "Brief Warm-up" },
+      { id: 2, label: "Past Experience", sub: "Career History" },
+      { id: 3, label: "STAR Scenarios", sub: "Behavioral deep-dive" },
+      { id: 4, label: "Culture Fit", sub: "Workplace Dynamics" },
+      { id: 5, label: "Reflection", sub: "Final Closing" },
+    ]
+  }
+  if (type === 'leadership') {
+    return [
+      { id: 1, label: "Introduction", sub: "Brief Warm-up" },
+      { id: 2, label: "Management Style", sub: "Leadership approach" },
+      { id: 3, label: "Strategic Thinking", sub: "High-level planning" },
+      { id: 4, label: "Conflict Resolution", sub: "Handling team dynamics" },
+      { id: 5, label: "Reflection", sub: "Final Closing" },
+    ]
+  }
+  return [
+    { id: 1, label: "Icebreaker", sub: "Warm-up & Introduction" },
+    { id: 2, label: "Behavioral", sub: "STAR Method Evaluation" },
+    { id: 3, label: "Situational", sub: "Problem Solving" },
+    { id: 4, label: "Technical", sub: "Skill Assessment" },
+    { id: 5, label: "Reflection", sub: "Final Closing" },
+  ]
+}
 
 const vapi = typeof window !== "undefined" ? new Vapi(process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY || "") : null
 
@@ -63,6 +89,13 @@ export default function InterviewSessionPage() {
   const [message, setMessage] = React.useState("")
   const [messages, setMessages] = React.useState<any[]>([])
   const [isThinking, setIsThinking] = React.useState(false)
+  const [timeLeft, setTimeLeft] = React.useState(600)
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60)
+    const s = seconds % 60
+    return `${m}:${s.toString().padStart(2, '0')}`
+  }
 
   // Vapi Call Logic
   const startVapiCall = async () => {
@@ -151,6 +184,10 @@ export default function InterviewSessionPage() {
 
       if (data) {
         setSessionData(data)
+        if (data.duration) {
+          const mins = parseInt(data.duration.split(" ")[0])
+          if (!isNaN(mins)) setTimeLeft(mins * 60)
+        }
         setMessages([
           { 
             role: "ai", 
@@ -162,6 +199,21 @@ export default function InterviewSessionPage() {
 
     if (id) fetchSession()
   }, [id])
+
+  React.useEffect(() => {
+    if (!isRecording) return
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer)
+          handleEndSession() // Time's up!
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [isRecording])
 
   const handleSendMessage = async () => {
     if (!message.trim() || !sessionData) return
@@ -206,7 +258,7 @@ export default function InterviewSessionPage() {
         interview_id: id,
         category: 'Overall',
         score: result.overallScore,
-        feedback_text: result.feedback
+        feedback_text: JSON.stringify(result)
       }])
 
       // Redirect to results page
@@ -241,10 +293,10 @@ export default function InterviewSessionPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Interview Roadmap</span>
-                <span className="text-xs font-bold text-primary">{Math.round((currentStage / 8) * 100)}%</span>
+                <span className="text-xs font-bold text-primary">{Math.round((currentStage / getInterviewStages(sessionData?.type).length) * 100)}%</span>
               </div>
               <div className="space-y-2">
-                {interviewStages.map((stage) => {
+                {getInterviewStages(sessionData?.type).map((stage) => {
                   const isCompleted = stage.id < currentStage
                   const isActive = stage.id === currentStage
                   return (
@@ -309,9 +361,12 @@ export default function InterviewSessionPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-mono mr-4">
-              <Clock className="w-3.5 h-3.5 text-primary" />
-              24:12
+            <div className={cn(
+              "flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border text-xs font-mono mr-4 transition-colors",
+              timeLeft < 60 ? "border-red-500/50 text-red-500 animate-pulse" : "border-white/10 text-muted-foreground"
+            )}>
+              <Clock className={cn("w-3.5 h-3.5", timeLeft < 60 ? "text-red-500" : "text-primary")} />
+              {formatTime(timeLeft)}
             </div>
             <Button 
               variant="ghost" 

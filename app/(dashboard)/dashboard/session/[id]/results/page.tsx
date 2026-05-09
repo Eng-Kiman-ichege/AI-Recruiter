@@ -61,23 +61,34 @@ export default function SessionResultsPage() {
     if (id) fetchResults()
   }, [id])
 
-  const scores = [
-    { label: "Technical Accuracy", value: 84, color: "text-blue-500" },
-    { label: "Communication", value: 92, color: "text-emerald-500" },
-    { label: "Confidence", value: 78, color: "text-amber-500" },
-    { label: "Problem Solving", value: 81, color: "text-purple-500" },
+  const getParsedFeedback = () => {
+    if (!feedback?.feedback_text) return null
+    try {
+      // If it's already an object, return it. If string, parse it.
+      return typeof feedback.feedback_text === 'string' ? JSON.parse(feedback.feedback_text) : feedback.feedback_text
+    } catch (e) {
+      return null
+    }
+  }
+
+  const parsedFeedback = getParsedFeedback()
+
+  const scores = parsedFeedback ? [
+    { label: "Technical", value: parsedFeedback.scores?.technical || 0, color: "text-blue-500" },
+    { label: "Communication", value: parsedFeedback.scores?.communication || 0, color: "text-emerald-500" },
+    { label: "Confidence", value: parsedFeedback.scores?.confidence || 0, color: "text-amber-500" },
+    { label: "Problem Solving", value: parsedFeedback.scores?.problemSolving || 0, color: "text-purple-500" },
+  ] : [
+    { label: "Technical Accuracy", value: 0, color: "text-blue-500" },
+    { label: "Communication", value: 0, color: "text-emerald-500" },
+    { label: "Confidence", value: 0, color: "text-amber-500" },
+    { label: "Problem Solving", value: 0, color: "text-purple-500" },
   ]
 
-  const improvementAreas = [
-    { title: "System Scalability", desc: "You struggled to explain how to handle 1M+ concurrent users in the load balancer question.", impact: "High" },
-    { title: "STAR Method", desc: "Your behavioral responses were slightly unfocused. Try to be more concise in the 'Action' phase.", impact: "Medium" }
-  ]
+  const improvementAreas = parsedFeedback?.weaknesses || []
+  const strengths = parsedFeedback?.strengths || []
+  const recommendations = parsedFeedback?.recommendations || []
 
-  const transcriptHighlights = [
-    { role: "ai", text: "How would you handle a sudden traffic spike on the frontend?" },
-    { role: "user", text: "I would probably use some kind of caching mechanism like Redis...", type: "good", feedback: "Strong technical intuition mentioned here." },
-    { role: "user", text: "Umm, I'm not entirely sure about the specifics of the load balancer configuration...", type: "weak", feedback: "Hesitation noted. Try to explain theoretical concepts even if the specifics are unknown." }
-  ]
 
   return (
     <div className="max-w-6xl mx-auto space-y-12 pb-20">
@@ -128,7 +139,7 @@ export default function SessionResultsPage() {
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-6xl font-bold font-heading">{feedback?.score ? (feedback.score / 10).toFixed(1) : '0.0'}</span>
+                <span className="text-6xl font-bold font-heading">{parsedFeedback?.overallScore ? (parsedFeedback.overallScore / 10).toFixed(1) : '0.0'}</span>
                 <span className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Overall Score</span>
               </div>
             </div>
@@ -171,7 +182,7 @@ export default function SessionResultsPage() {
               </div>
               <div>
                 <h4 className="font-bold">AI Recruiter's Take</h4>
-                <p className="text-sm text-muted-foreground">"{feedback?.feedback_text || 'Great session! Your full analysis is being processed.'}"</p>
+                <p className="text-sm text-muted-foreground">"{parsedFeedback?.feedback || 'Great session! Your full analysis is being processed.'}"</p>
               </div>
             </div>
           </Card>
@@ -183,34 +194,18 @@ export default function SessionResultsPage() {
         <div className="lg:col-span-2 space-y-8">
           <section className="space-y-6">
             <h2 className="text-2xl font-bold font-heading flex items-center gap-3">
-              <MessageSquare className="w-6 h-6 text-primary" />
-              Interview Transcript Analysis
+              <Star className="w-6 h-6 text-primary" />
+              Key Strengths
             </h2>
             <div className="space-y-4">
-              {transcriptHighlights.map((t, i) => (
-                <div key={i} className={cn(
-                  "p-6 rounded-3xl border transition-all",
-                  t.role === "ai" ? "bg-white/5 border-white/5" : "bg-black border-white/10"
-                )}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Badge variant="outline" className={cn(
-                      "text-[10px] uppercase tracking-tighter px-2",
-                      t.role === "ai" ? "text-primary border-primary/30" : "text-muted-foreground border-white/10"
-                    )}>
-                      {t.role === "ai" ? "AI Interviewer" : "Your Response"}
-                    </Badge>
-                    {t.type === "good" && <Badge className="bg-emerald-500/20 text-emerald-500 border-none text-[10px]">Positive Impact</Badge>}
-                    {t.type === "weak" && <Badge className="bg-rose-500/20 text-rose-500 border-none text-[10px]">Needs Review</Badge>}
-                  </div>
-                  <p className="text-sm mb-4 leading-relaxed">{t.text}</p>
-                  {t.feedback && (
-                    <div className="flex items-start gap-3 p-4 rounded-2xl bg-primary/5 border border-primary/10">
-                      <Star className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                      <p className="text-xs text-primary/80 italic">{t.feedback}</p>
-                    </div>
-                  )}
+              {strengths.map((s: string, i: number) => (
+                <div key={i} className="p-6 rounded-3xl border bg-primary/5 border-primary/20">
+                  <p className="text-sm leading-relaxed">{s}</p>
                 </div>
               ))}
+              {strengths.length === 0 && (
+                <p className="text-muted-foreground">No specific strengths recorded yet.</p>
+              )}
             </div>
           </section>
         </div>
@@ -249,20 +244,17 @@ export default function SessionResultsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
-              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 group cursor-pointer hover:bg-primary/5 hover:border-primary/30 transition-all">
-                <h6 className="font-bold text-sm mb-1">Advanced React Patterns</h6>
-                <p className="text-[10px] text-muted-foreground">3 modules • 45 mins</p>
-                <div className="flex justify-end mt-2 opacity-0 group-hover:opacity-100 transition-all">
-                  <ChevronRight className="w-4 h-4 text-primary" />
+              {recommendations.map((rec: string, i: number) => (
+                <div key={i} className="p-4 rounded-2xl bg-white/5 border border-white/10 group cursor-pointer hover:bg-primary/5 hover:border-primary/30 transition-all">
+                  <h6 className="font-bold text-sm mb-1">{rec}</h6>
+                  <div className="flex justify-end mt-2 opacity-0 group-hover:opacity-100 transition-all">
+                    <ChevronRight className="w-4 h-4 text-primary" />
+                  </div>
                 </div>
-              </div>
-              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 group cursor-pointer hover:bg-primary/5 hover:border-primary/30 transition-all">
-                <h6 className="font-bold text-sm mb-1">STAR Method Guide</h6>
-                <p className="text-[10px] text-muted-foreground">Interactive Workshop</p>
-                <div className="flex justify-end mt-2 opacity-0 group-hover:opacity-100 transition-all">
-                  <ChevronRight className="w-4 h-4 text-primary" />
-                </div>
-              </div>
+              ))}
+              {recommendations.length === 0 && (
+                <p className="text-sm text-muted-foreground">No recommendations available.</p>
+              )}
             </CardContent>
           </Card>
         </div>

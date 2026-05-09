@@ -60,7 +60,7 @@ const interviewTypes = [
 ]
 
 const experienceLevels = ["Entry Level", "Junior", "Mid-level", "Senior", "Lead", "Executive"]
-const durations = ["15 mins", "30 mins", "45 mins", "60 mins"]
+const durations = ["5 mins", "10 mins", "15 mins", "20 mins"]
 
 // --- Components ---
 
@@ -80,7 +80,7 @@ export default function InterviewSetupFlow() {
     experience: "Mid-level",
     jd: "",
     skills: [] as string[],
-    duration: "30 mins",
+    duration: "10 mins",
     resumeUrl: ""
   })
 
