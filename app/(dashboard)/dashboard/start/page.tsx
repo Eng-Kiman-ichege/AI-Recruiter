@@ -81,7 +81,8 @@ export default function InterviewSetupFlow() {
     jd: "",
     skills: [] as string[],
     duration: "10 mins",
-    resumeUrl: ""
+    resumeUrl: "",
+    industry_custom: ""
   })
 
   const nextStep = () => setStep(s => Math.min(s + 1, 5))
