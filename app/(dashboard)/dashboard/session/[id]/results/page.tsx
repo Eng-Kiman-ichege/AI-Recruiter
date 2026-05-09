@@ -220,7 +220,7 @@ export default function SessionResultsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
-              {improvementAreas.map((area, i) => (
+              {improvementAreas.map((area: any, i: number) => (
                 <div key={i} className="space-y-2">
                   <div className="flex justify-between items-center">
                     <h5 className="font-bold text-sm">{area.title}</h5>
