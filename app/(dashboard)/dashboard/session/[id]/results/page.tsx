@@ -17,7 +17,8 @@ import {
   Star,
   ChevronRight,
   LayoutDashboard,
-  RotateCcw
+  RotateCcw,
+  Sparkles
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -118,7 +119,7 @@ export default function SessionResultsPage() {
                   transition={{ duration: 2, ease: "easeOut" }}
                   className="text-primary" 
                   strokeWidth="8" 
-                  strokeDashcap="round" 
+                  strokeLinecap="round" 
                   stroke="currentColor" 
                   fill="transparent" 
                   r="80" 

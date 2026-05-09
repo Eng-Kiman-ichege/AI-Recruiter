@@ -2,7 +2,8 @@
 
 export async function chatCompletion(messages: { role: string; content: string }[]) {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = "inclusionai/ring-2.6-1t:free";
+  // Fallback to a highly reliable model if the primary one fails
+  const model = "inclusionai/ring-2.6-1t:free"; 
 
   try {
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -10,7 +11,7 @@ export async function chatCompletion(messages: { role: string; content: string }
       headers: {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://interview-iq.com", // Replace with your domain
+        "HTTP-Referer": "https://interview-iq.com",
         "X-Title": "InterviewIQ",
       },
       body: JSON.stringify({
@@ -20,10 +21,21 @@ export async function chatCompletion(messages: { role: string; content: string }
     });
 
     const data = await response.json();
+    
+    if (data.error) {
+      console.error("OPENROUTER API ERROR:", data.error);
+      throw new Error(data.error.message || "AI Provider Error");
+    }
+
+    if (!data.choices || data.choices.length === 0) {
+      console.error("OPENROUTER EMPTY RESPONSE:", data);
+      throw new Error("AI returned an empty response.");
+    }
+
     return data.choices[0].message.content;
-  } catch (error) {
-    console.error("OpenRouter Error:", error);
-    throw new Error("Failed to get AI completion");
+  } catch (error: any) {
+    console.error("OpenRouter Action Error:", error);
+    throw new Error(error.message || "Failed to get AI completion");
   }
 }
 
@@ -57,15 +69,23 @@ export async function analyzeInterview(transcript: string) {
       },
       body: JSON.stringify({
         model: model,
-        messages: [{ role: "system", content: "You are a senior recruiter analyzer. Return only JSON." }, { role: "user", content: analysisPrompt }],
+        messages: [
+          { role: "system", content: "You are a senior recruiter analyzer. Return only valid JSON." }, 
+          { role: "user", content: analysisPrompt }
+        ],
         response_format: { type: "json_object" }
       }),
     });
 
     const data = await response.json();
+
+    if (data.error) {
+      throw new Error(data.error.message || "Analysis API Error");
+    }
+
     return JSON.parse(data.choices[0].message.content);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Analysis Error:", error);
-    throw new Error("Failed to analyze interview");
+    throw new Error(error.message || "Failed to analyze interview");
   }
 }

@@ -22,6 +22,7 @@ import {
   Play
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -77,30 +78,58 @@ export default function InterviewSessionPage() {
       skills: sessionData.technologies,
     })
 
-    vapi.start({
-      name: `Interview with ${sessionData.role}`,
-      assistant: {
+    try {
+      await vapi.start({
+        name: `Interview with ${sessionData.role}`,
         model: {
           provider: "openai",
-          model: "gpt-4", // Vapi will handle the voice logic
-          systemPrompt: systemPrompt,
+          model: "gpt-3.5-turbo", 
+          messages: [
+            {
+              role: "system",
+              content: systemPrompt
+            }
+          ]
         },
-        voice: "josh", // Professional male voice
         firstMessage: `Hello! I'm your AI interviewer. Ready to start your interview for the ${sessionData.role} role?`,
-      },
-    })
+        firstMessageMode: "assistant-speaks-first",
+      })
+    } catch (err: any) {
+      console.error("Vapi Start Error:", err)
+      setIsRecording(false)
+      alert("Failed to start voice call. Please check your API key and microphone permissions.")
+    }
   }
 
   const stopVapiCall = () => {
     if (vapi) vapi.stop()
     setIsRecording(false)
+    setIsThinking(false)
   }
 
   React.useEffect(() => {
     if (!vapi) return
 
-    vapi.on("call-start", () => setIsRecording(true))
-    vapi.on("call-end", () => setIsRecording(false))
+    vapi.on("error", (e: any) => {
+      console.error("Vapi Background Error:", e.message || JSON.stringify(e, Object.getOwnPropertyNames(e)))
+      setIsRecording(false)
+      setIsThinking(false)
+      alert("Voice connection error. Please ensure your Vapi account has credits and valid provider keys.")
+    })
+
+    vapi.on("call-start", () => {
+      setIsRecording(true)
+      setIsThinking(false)
+    })
+    
+    vapi.on("call-end", () => {
+      setIsRecording(false)
+      setIsThinking(false)
+    })
+
+    vapi.on("speech-start", () => setIsThinking(true)) // Pulse visualizer when AI speaks
+    vapi.on("speech-end", () => setIsThinking(false))
+
     vapi.on("message", (msg: any) => {
       if (msg.type === "transcript" && msg.transcriptType === "final") {
         setMessages(prev => [...prev, { role: msg.role, content: msg.transcript }])
@@ -405,54 +434,31 @@ export default function InterviewSessionPage() {
           </div>
         </div>
 
-        {/* Input Control Bar */}
-        <div className="p-6 bg-gradient-to-t from-background via-background to-transparent pt-20 border-t border-white/5 relative z-10">
-          <div className="max-w-3xl mx-auto space-y-6">
-            <div className="flex items-center gap-4">
-              <div className="relative flex-1">
-                <Textarea 
-                  placeholder="Type your response here..." 
-                  className="min-h-[60px] max-h-[200px] bg-white/5 border-white/10 rounded-3xl p-6 pr-16 focus:border-primary transition-all resize-none shadow-2xl"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSendMessage())}
-                />
-                <Button 
-                  onClick={handleSendMessage}
-                  disabled={!message.trim() || isThinking}
-                  className="absolute right-3 bottom-3 w-10 h-10 rounded-full shadow-lg"
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Button 
-                  onClick={() => isRecording ? stopVapiCall() : startVapiCall()}
-                  className={cn(
-                    "w-16 h-16 rounded-full shadow-2xl transition-all hover:scale-110",
-                    isRecording ? "bg-rose-500 hover:bg-rose-600 scale-105 ring-4 ring-rose-500/20" : "bg-primary hover:bg-primary/90"
-                  )}
-                >
-                  {isRecording ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
-                </Button>
-                <div className="text-[10px] text-center font-bold text-muted-foreground uppercase tracking-widest">
-                  {isRecording ? "Listening" : "Speak"}
-                </div>
-              </div>
+        {/* Input Control Bar - Voice Only */}
+        <div className="p-12 bg-gradient-to-t from-background via-background to-transparent pt-20 border-t border-white/5 relative z-10 flex flex-col items-center gap-8">
+          <div className="flex flex-col items-center gap-4">
+            <Button 
+              onClick={() => isRecording ? stopVapiCall() : startVapiCall()}
+              className={cn(
+                "w-24 h-24 rounded-full shadow-2xl transition-all hover:scale-110",
+                isRecording ? "bg-rose-500 hover:bg-rose-600 scale-105 ring-8 ring-rose-500/10" : "bg-primary hover:bg-primary/90"
+              )}
+            >
+              {isRecording ? <MicOff className="w-10 h-10" /> : <Mic className="w-10 h-10" />}
+            </Button>
+            <div className="text-sm text-center font-bold text-muted-foreground uppercase tracking-widest animate-pulse">
+              {isRecording ? "Call in progress" : "Tap to start call"}
             </div>
+          </div>
 
-            <div className="flex items-center justify-between px-2">
-              <div className="flex items-center gap-4">
-                <Button variant="ghost" size="sm" onClick={() => setIsMuted(!isMuted)} className="text-muted-foreground hover:text-white rounded-full">
-                  {isMuted ? <VolumeX className="w-4 h-4 mr-2" /> : <Volume2 className="w-4 h-4 mr-2" />}
-                  AI Audio: {isMuted ? "Off" : "On"}
-                </Button>
-              </div>
-              <p className="text-[10px] text-muted-foreground font-medium italic">
-                Tip: Press <kbd className="px-1.5 py-0.5 rounded bg-white/10 border border-white/10 font-sans">Enter</kbd> to send, or click the Mic to speak.
-              </p>
-            </div>
+          <div className="flex items-center justify-between w-full max-w-3xl px-6">
+            <Button variant="ghost" size="sm" onClick={() => setIsMuted(!isMuted)} className="text-muted-foreground hover:text-white rounded-full">
+              {isMuted ? <VolumeX className="w-4 h-4 mr-2" /> : <Volume2 className="w-4 h-4 mr-2" />}
+              AI Audio: {isMuted ? "Off" : "On"}
+            </Button>
+            <p className="text-[10px] text-muted-foreground font-medium italic">
+              Powered by Vapi & 11Labs Real-time Voice
+            </p>
           </div>
         </div>
       </main>

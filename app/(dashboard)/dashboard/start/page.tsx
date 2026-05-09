@@ -139,7 +139,7 @@ export default function InterviewSetupFlow() {
           role: config.role,
           job_description: config.jd,
           technologies: config.skills,
-          industry: config.industry,
+          industry: config.industry === 'other' ? config.industry_custom : config.industry,
           type: config.type,
           experience: config.experience,
           duration: config.duration,
@@ -152,8 +152,15 @@ export default function InterviewSetupFlow() {
 
       // 3. Redirect to the session
       router.push(`/dashboard/session/${interviewData[0].id}`)
-    } catch (err) {
-      console.error("Setup error:", err)
+    } catch (err: any) {
+      console.error("FULL SETUP ERROR:", err)
+      const errorMessage = err.message || err.error_description || "An unknown error occurred during setup."
+      const errorDetails = err.details || ""
+      
+      console.error(`Error Message: ${errorMessage}`)
+      if (errorDetails) console.error(`Error Details: ${errorDetails}`)
+      
+      alert(`Setup Failed: ${errorMessage} ${errorDetails ? `(${errorDetails})` : ""}`)
       setIsLoading(false)
     }
   }
