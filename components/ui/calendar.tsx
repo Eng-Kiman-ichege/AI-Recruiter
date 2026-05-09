@@ -88,10 +88,10 @@ function Calendar({
           defaultClassNames.caption_label
         ),
         month_grid: "w-full border-collapse",
-        week_days: cn("flex", defaultClassNames.week_days),
-        week_day: cn(
+        weekdays: cn("flex", defaultClassNames.weekdays),
+        weekday: cn(
           "flex-1 rounded-(--cell-radius) text-[0.8rem] font-normal text-muted-foreground select-none",
-          defaultClassNames.week_day
+          defaultClassNames.weekday
         ),
         week: cn("mt-2 flex w-full", defaultClassNames.week),
         week_number_header: cn(
