@@ -53,7 +53,7 @@ export default function DashboardPage() {
         variants={item}
         initial="hidden"
         animate="show"
-        className="relative p-10 rounded-[3rem] bg-gradient-to-br from-primary/20 via-purple-500/10 to-transparent border border-white/10 overflow-hidden"
+        className="relative p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] bg-gradient-to-br from-primary/20 via-purple-500/10 to-transparent border border-white/10 overflow-hidden"
       >
         <div className="absolute top-0 right-0 p-12 opacity-10">
           <BrainCircuit className="w-64 h-64 text-primary" />
@@ -70,12 +70,12 @@ export default function DashboardPage() {
             Ready to ace your next role? You've improved your technical communication by <span className="text-emerald-500 font-bold">12%</span> this week. Let's keep the momentum going.
           </p>
           <div className="flex flex-wrap gap-4">
-            <Link href="/dashboard/start">
-              <Button size="lg" className="rounded-full px-8 h-12 shadow-xl shadow-primary/20">
+            <Link href="/dashboard/start" className="w-full sm:w-auto">
+              <Button size="lg" className="w-full sm:w-auto rounded-full px-8 h-12 shadow-xl shadow-primary/20">
                 Start Mock Interview
               </Button>
             </Link>
-            <Button variant="outline" size="lg" className="rounded-full px-8 h-12 border-white/10 hover:bg-white/5">
+            <Button variant="outline" size="lg" className="w-full sm:w-auto rounded-full px-8 h-12 border-white/10 hover:bg-white/5">
               View Growth Plan
             </Button>
           </div>

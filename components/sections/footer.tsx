@@ -4,6 +4,7 @@ import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, BrainCircuit, Code, Send, ExternalLink, Mail } from "lucide-react"
 import Link from "next/link"
+import { Show } from "@clerk/nextjs"
 
 export function CTA() {
   return (
@@ -25,12 +26,24 @@ export function CTA() {
           <p className="text-muted-foreground text-xl max-w-2xl mx-auto mb-10 relative z-10">
             Join 50,000+ candidates who have transformed their interview performance with InterviewIQ.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10">
-            <Button size="lg" className="h-14 px-10 text-lg rounded-full shadow-2xl shadow-primary/20">
-              Get Started for Free
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </Button>
-            <Button size="lg" variant="outline" className="h-14 px-10 text-lg rounded-full border-white/10 hover:bg-white/5">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10 w-full px-4 sm:px-0">
+            <Show when="signed-in">
+              <Link href="/dashboard/start" className="w-full sm:w-auto">
+                <Button size="lg" className="h-14 px-10 text-lg rounded-full shadow-2xl shadow-primary/20 w-full">
+                  Get Started for Free
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </Link>
+            </Show>
+            <Show when="signed-out">
+              <Link href="/sign-up" className="w-full sm:w-auto">
+                <Button size="lg" className="h-14 px-10 text-lg rounded-full shadow-2xl shadow-primary/20 w-full">
+                  Get Started for Free
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </Link>
+            </Show>
+            <Button size="lg" variant="outline" className="h-14 px-10 text-lg rounded-full border-white/10 hover:bg-white/5 w-full sm:w-auto">
               Talk to Sales
             </Button>
           </div>

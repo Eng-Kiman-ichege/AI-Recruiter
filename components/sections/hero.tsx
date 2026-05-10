@@ -5,6 +5,8 @@ import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, Play, Star } from "lucide-react"
+import { Show } from "@clerk/nextjs"
+import Link from "next/link"
 
 export function Hero() {
   return (
@@ -34,12 +36,24 @@ export function Hero() {
             scoring, and the confidence to ace any interview.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-            <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-2xl shadow-primary/20">
-              Start Your First Interview
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </Button>
-            <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-white/10 hover:bg-white/5">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 w-full px-4 sm:px-0">
+            <Show when="signed-in">
+              <Link href="/dashboard/start" className="w-full sm:w-auto">
+                <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-2xl shadow-primary/20 w-full">
+                  Start Your First Interview
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </Link>
+            </Show>
+            <Show when="signed-out">
+              <Link href="/sign-up" className="w-full sm:w-auto">
+                <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-2xl shadow-primary/20 w-full">
+                  Start Your First Interview
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </Link>
+            </Show>
+            <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-white/10 hover:bg-white/5 w-full sm:w-auto">
               <Play className="mr-2 w-5 h-5 fill-current" />
               Watch Demo
             </Button>
